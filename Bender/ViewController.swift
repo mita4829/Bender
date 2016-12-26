@@ -4,141 +4,144 @@
 //
 //  Created by Michael Tang on 12/23/16.
 //  Copyright © 2016 Michael Tang. All rights reserved.
-//
+//  String extension courtesy of serg_zhd
 
 import UIKit
 import Foundation
+
+public extension String {
+    
+    func substring(_ r: Range<Int>) -> String {
+        let fromIndex = self.index(self.startIndex, offsetBy: r.lowerBound)
+        let toIndex = self.index(self.startIndex, offsetBy: r.upperBound)
+        return self.substring(with: Range<String.Index>(uncheckedBounds: (lower: fromIndex, upper: toIndex)))
+    }
+    
+}
 
 class ViewController: UIViewController {
     @IBOutlet weak var zero: UIButton!
     
     @IBAction func zeroPressed(_ sender: UIButton) {
-        tmpFloatValue.append("0")
+        stream.append("0")
         screen.text = screen.text!+String("0")
     }
     @IBAction func onePressed(_ sender: UIButton) {
-        tmpFloatValue.append("1")
+        stream.append("1")
         screen.text = screen.text!+String("1")
     }
     @IBAction func twoPressed(_ sender: UIButton) {
-        tmpFloatValue.append("2")
+        stream.append("2")
         screen.text = screen.text!+String("2")
     }
     @IBAction func threePressed(_ sender: UIButton) {
-        tmpFloatValue.append("3")
+        stream.append("3")
         screen.text = screen.text!+String("3")
     }
     @IBAction func fourPressed(_ sender: UIButton) {
-        tmpFloatValue.append("4")
+        stream.append("4")
         screen.text = screen.text!+String("4")
     }
     @IBAction func fivePressed(_ sender: UIButton) {
-        tmpFloatValue.append("5")
+        stream.append("5")
         screen.text = screen.text!+String("5")
     }
     @IBAction func sixPressed(_ sender: UIButton) {
-        tmpFloatValue.append("6")
+        stream.append("6")
         screen.text = screen.text!+String("6")
     }
     @IBAction func sevenPressed(_ sender: UIButton) {
-        tmpFloatValue.append("7")
+        stream.append("7")
         screen.text = screen.text!+String("7")
     }
     @IBAction func eightPressed(_ sender: UIButton) {
-        tmpFloatValue.append("8")
+        stream.append("8")
         screen.text = screen.text!+String("8")
     }
     @IBAction func ninePressed(_ sender: UIButton) {
-        tmpFloatValue.append("9")
+        stream.append("9")
         screen.text = screen.text!+String("9")
     }
     @IBAction func deciPressed(_ sender: UIButton) {
-        if(!tmpFloatValue.contains(".")){
-            tmpFloatValue.append(".")
-            screen.text = screen.text!+String(".")
-        }
+        stream.append(".")
+        screen.text = screen.text!+String(".")
     }
     @IBAction func deletePressed(_ sender: UIButton) {
-        if(tmpFloatValue.characters.count > 0){
-            tmpFloatValue = String(tmpFloatValue.characters.dropLast())
+        if(stream != ""){
+            stream.characters.removeLast()
             screen.text = String(screen.text!.characters.dropLast())
-        }
-        if(!notOperator(token: String(screen.text!.characters.last!))){
-            screen.text = String(screen.text!.characters.dropLast())
-            exprs.removeLast()
         }
     }
     
+    @IBAction func leftPar(_ sender: UIButton) {
+        stream.append("(")
+        screen.text = screen.text!+String("(")
+    }
+    
+    @IBAction func rightPar(_ sender: UIButton) {
+        stream.append(")")
+        screen.text = screen.text!+String(")")
+    }
     
     @IBAction func plusPressed(_ sender: UIButton) {
-        if(tmpFloatValue != ""){
-            exprs.append(tmpFloatValue)
-        }
-        if(exprs.count > 0 && notOperator(token: exprs.last!)){
-            tmpFloatValue.removeAll()
-            exprs.append("+")
-            screen.text = screen.text!+String("+")
-        }
+        stream.append("+")
+        screen.text = screen.text!+String("+")
     }
     
     @IBAction func minusPressed(_ sender: UIButton) {
-        if(tmpFloatValue != ""){
-            exprs.append(tmpFloatValue)
-        }
-        if(exprs.count > 0 && notOperator(token: exprs.last!)){
-            tmpFloatValue.removeAll()
-            exprs.append("-")
-            screen.text = screen.text!+String("-")
-        }
- 
+        stream.append("-")
+        screen.text = screen.text!+String("-")
     }
     @IBAction func timesPressed(_ sender: UIButton) {
-        if(tmpFloatValue != ""){
-            exprs.append(tmpFloatValue)
-        }
-        if(exprs.count > 0 && notOperator(token: exprs.last!)){
-            tmpFloatValue.removeAll()
-            exprs.append("*")
-            screen.text = screen.text!+String("×")
-        }
-
+        stream.append("*")
+        screen.text = screen.text!+String("×")
     }
     @IBAction func divPressed(_ sender: UIButton) {
-        if(tmpFloatValue != ""){
-            exprs.append(tmpFloatValue)
-        }
-        if(exprs.count > 0 && notOperator(token: exprs.last!)){
-            tmpFloatValue.removeAll()
-            exprs.append("/")
-            screen.text = screen.text!+String("/")
-        }
+        stream.append("/")
+        screen.text = screen.text!+String("/")
     }
     @IBAction func equalPressed(_ sender: UIButton) {
-        if(exprs.count > 0){
-            if(tmpFloatValue != ""){
-                exprs.append(tmpFloatValue)
+        tokens = lex(s: stream)
+        screen.text!.removeAll()
+        stream.removeAll()
+        
+        if(isVaildTokensModel(tokens: tokens)){
+            let result:Float = exprModel()
+            if(canBeIntegerModel(value: result)){
+                screen.text = String(Int64(result))
+                tokens.removeAll()
+                stream.append(String(Int64(result)))
+            
+            }else{
+                screen.text = String(result)
+                tokens.removeAll()
+                stream.append(String(result))
             }
-            tmpFloatValue.removeAll()
-            if(notOperator(token: exprs.last!)){
-                let result = exprModel()
-                if(canBeIntegerModel(value: result)){
-                    screen.text = String(Int(result))
-                    exprs.removeAll()
-                    tmpFloatValue = String(Int(result))
-                    
-                }else{
-                    screen.text = String(result)
-                    exprs.removeAll()
-                    tmpFloatValue = String(result)
-                    
-                }
-            }
+            
+        }else{
+            invaildExprView()
         }
     }
     @IBAction func clearPressed(_ sender: UIButton) {
-        exprs.removeAll()
-        tmpFloatValue.removeAll()
+        view.viewWithTag(1)?.removeFromSuperview()
+        if let tag = self.view.viewWithTag(1) {
+            tag.removeFromSuperview()
+        }
+        tokens.removeAll()
         screen.text!.removeAll()
+        stream.removeAll()
+    }
+    @IBAction func negPressed(_ sender: UIButton) {
+        tokens = lex(s: stream)
+        screen.text!.removeAll()
+        stream.removeAll()
+        if(isVaildTokensModel(tokens: tokens)){
+            equal.sendActions(for: .touchUpInside)
+            stream.append("*(-1)")
+            equal.sendActions(for: .touchUpInside)
+        }else{
+            invaildExprView()
+        }
     }
     @IBOutlet weak var one: UIButton!
     @IBOutlet weak var two: UIButton!
@@ -162,23 +165,25 @@ class ViewController: UIViewController {
     @IBOutlet weak var leftPar: UIButton!
     @IBOutlet weak var rightPar: UIButton!
     @IBOutlet weak var neg: UIButton!
+    @IBOutlet weak var errorMessage: UILabel!
     
     @IBOutlet weak var screen: UILabel!
-    var exprs:[String] = []
-    var tmpFloatValue:String = ""
+    
     var current:String = ""
+    var stream = ""
+    var tokens:[String] = []
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         let buttons: [UIButton] = [self.zero,self.one,self.two,self.three,self.four,self.five,self.six,self.seven,self.eight,self.nine,self.deci,self.percent,self.delete,self.equal,self.plus,self.minus,self.times,self.div,self.clear,self.leftPar,self.rightPar,self.neg]
      
         buttonOutlineView(list: buttons)
-        // Do any additional setup after loading the view, typically from a nib.
     }
-    
-    
+
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+        view.viewWithTag(1)?.removeFromSuperview()
+        view.viewWithTag(2)?.removeFromSuperview()
     }
     
     func buttonOutlineView(list:[UIButton]) -> Void {
@@ -213,14 +218,36 @@ class ViewController: UIViewController {
         while (current == "*" || current == "/" || current == "("){
             if current == "*"{
                 nextModel()
-                result *= factorModel()
+                let r = factorModel()
+                if(Int64(result*r) > Int64(Int32.max)){
+                    overflowView()
+                    result = 0
+                }else{
+                    result *= r
+                }
             }
             else if(current == "/"){
                 nextModel()
-                result /= factorModel()
+                let r = factorModel()
+                if(r == 0){
+                    overflowView()
+                    return 0
+                }
+                if(Int64(result/r) > Int64(Int32.max)){
+                    overflowView()
+                    result = 0
+                }else{
+                    result /= r
+                }
             }else{
                 nextModel()
-                result *= factorModel()
+                let r = factorModel()
+                if(Int64(result*r) > Int64(Int32.max)){
+                    overflowView()
+                    result = 0
+                }else{
+                    result *= r
+                }
                 nextModel()
             }
         }
@@ -229,12 +256,17 @@ class ViewController: UIViewController {
     
     func factorModel() -> Float {
         var result:Float = 0
-        current = exprs.first!
+        current = tokens.first!
         if(current == "("){
             nextModel()
             result = exprModel()
             nextModel()
-        }else{
+        }else if(current == "-"){
+            nextModel()
+            result = -1*Float(current)!
+            nextModel()
+        }
+        else{
             result = Float(current)!
             nextModel()
         }
@@ -242,9 +274,9 @@ class ViewController: UIViewController {
     }
     
     func nextModel() -> Void {
-        if(exprs.count > 1){
-            exprs.remove(at: 0)
-            current = exprs.first!
+        if(tokens.count > 1){
+            tokens.remove(at: 0)
+            current = tokens.first!
         }
     }
     
@@ -259,6 +291,124 @@ class ViewController: UIViewController {
     }
     func displayView(char:Character) -> Void{
         screen.text = screen.text!+String(char)
+    }
+    
+    func lex(s:String) -> [String] {
+        var l = 0
+        var i = 0
+        var tokens:[String] = []
+        
+        while i < s.characters.count {
+            let index = s.index(s.startIndex, offsetBy: i)
+            if(s[index] == "+"){
+                let subToken = s.substring(l..<i)
+                if(subToken != ""){
+                    tokens.append(subToken)
+                }
+                tokens.append("+")
+                l = i+1
+            }else if(s[index] == "-"){
+                let subToken = s.substring(l..<i)
+                if(subToken != ""){
+                    tokens.append(subToken)
+                }
+                tokens.append("-")
+                l = i+1
+            }
+            else if(s[index] == "*"){
+                let subToken = s.substring(l..<i)
+                if(subToken != ""){
+                    tokens.append(subToken)
+                }
+                tokens.append("*")
+                l = i+1
+            }
+            else if(s[index] == "/"){
+                let subToken = s.substring(l..<i)
+                if(subToken != ""){
+                    tokens.append(subToken)
+                }
+                tokens.append("/")
+                l = i+1
+            }
+            else if(s[index] == "("){
+                let subToken = s.substring(l..<i)
+                if(subToken != ""){
+                    tokens.append(subToken)
+                }
+                tokens.append("(")
+                l = i+1
+            }
+            else if(s[index] == ")"){
+                let subToken = s.substring(l..<i)
+                if(subToken != ""){
+                    tokens.append(subToken)
+                }
+                tokens.append(")")
+                l = i+1
+            }
+            i += 1
+        }
+        let subToken = s.substring(l..<i)
+        if(subToken != ""){
+            tokens.append(subToken)
+        }
+        return tokens
+    }
+    
+    func isVaildTokensModel(tokens:[String]) -> Bool {
+        var parenCheck:Int = 0
+        for i in 0..<tokens.count {
+            let i = i
+            if(!notOperator(token: tokens[i]) && (i == tokens.count-1)){
+                return false
+            }
+            else if(!notOperator(token: tokens[i]) && (!notOperator(token: tokens[i+1]))){
+                return false
+            }else if(tokens[i] == "("){
+                parenCheck += 1
+            }else if(tokens[i] == ")"){
+                parenCheck -= 1
+                if(tokens[i-1] == "("){
+                    return false
+                }
+            }
+            else if (Float(tokens[i]) == nil && notOperator(token: tokens[i])) {
+                return false
+            }
+        }
+        if(parenCheck != 0){
+            return false
+        }
+        return true
+    }
+    
+    func overflowView() -> Void {
+        let devicebound:CGRect = UIScreen.main.bounds
+        let alert:UILabel = UILabel(frame: CGRect(x: 0, y: -50, width: devicebound.width, height: 50))
+        alert.backgroundColor = UIColor(red: CGFloat(132.0/255.0), green: CGFloat(113.0/255.0), blue: CGFloat(171.0/255.0), alpha: 1.0)
+        alert.textColor = UIColor.white
+        alert.text = "Overflow"
+        alert.textAlignment = .center
+        alert.tag = 1
+        self.view.addSubview(alert)
+        UIView.animate(withDuration: 0.5, delay: 0.0, usingSpringWithDamping: 0.3, initialSpringVelocity: 0.0, options:UIViewAnimationOptions(rawValue: 0), animations: {
+            alert.frame = CGRect(x: 0, y: 0, width: devicebound.width, height: 60)
+        }, completion: nil)
+    }
+    
+    func invaildExprView() -> Void {
+        let devicebound:CGRect = UIScreen.main.bounds
+        let alert:UILabel = UILabel(frame: CGRect(x: 0, y: -50, width: devicebound.width, height: 50))
+        alert.backgroundColor = UIColor.red
+        alert.textColor = UIColor.white
+        alert.text = "Unable to evaulate expression"
+        alert.textAlignment = .center
+        alert.tag = 1
+        self.view.addSubview(alert)
+        UIView.animate(withDuration: 0.5, delay: 0.0, usingSpringWithDamping: 0.3, initialSpringVelocity: 0.0, options:UIViewAnimationOptions(rawValue: 0), animations: {
+            alert.frame = CGRect(x: 0, y: 0, width: devicebound.width, height: 60)
+        }, completion: nil)
     }
 }
 
