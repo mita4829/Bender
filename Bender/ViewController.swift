@@ -7,7 +7,7 @@
 //  String extension courtesy of serg_zhd
 
 import UIKit
-import Foundation
+import CoreMotion
 
 public extension String {
     
@@ -20,6 +20,8 @@ public extension String {
 }
 
 class ViewController: UIViewController {
+    let manager:CMMotionManager = CMMotionManager()
+        
     @IBOutlet weak var zero: UIButton!
     
     @IBAction func zeroPressed(_ sender: UIButton) {
@@ -102,8 +104,15 @@ class ViewController: UIViewController {
     }
     @IBAction func equalPressed(_ sender: UIButton) {
         tokens = lex(s: stream)
+        
+        if(screen.text == ""){
+            invaildExprView()
+            return
+        }
+        
         screen.text!.removeAll()
         stream.removeAll()
+    
         
         if(isVaildTokensModel(tokens: tokens)){
             let result:Float = exprModel()
@@ -178,12 +187,18 @@ class ViewController: UIViewController {
         let buttons: [UIButton] = [self.zero,self.one,self.two,self.three,self.four,self.five,self.six,self.seven,self.eight,self.nine,self.deci,self.percent,self.delete,self.equal,self.plus,self.minus,self.times,self.div,self.clear,self.leftPar,self.rightPar,self.neg]
      
         buttonOutlineView(list: buttons)
+        acclerometerEffect()
+        //activateProximitySensor()
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         view.viewWithTag(1)?.removeFromSuperview()
-        view.viewWithTag(2)?.removeFromSuperview()
+        manager.stopDeviceMotionUpdates()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        manager.stopDeviceMotionUpdates()
     }
     
     func buttonOutlineView(list:[UIButton]) -> Void {
@@ -385,30 +400,49 @@ class ViewController: UIViewController {
     
     func overflowView() -> Void {
         let devicebound:CGRect = UIScreen.main.bounds
-        let alert:UILabel = UILabel(frame: CGRect(x: 0, y: -50, width: devicebound.width, height: 50))
+        let alert:UILabel = UILabel(frame: CGRect(x: 0, y: -50, width: devicebound.width, height: 65))
         alert.backgroundColor = UIColor(red: CGFloat(132.0/255.0), green: CGFloat(113.0/255.0), blue: CGFloat(171.0/255.0), alpha: 1.0)
         alert.textColor = UIColor.white
         alert.text = "Overflow"
         alert.textAlignment = .center
         alert.tag = 1
         self.view.addSubview(alert)
-        UIView.animate(withDuration: 0.5, delay: 0.0, usingSpringWithDamping: 0.3, initialSpringVelocity: 0.0, options:UIViewAnimationOptions(rawValue: 0), animations: {
-            alert.frame = CGRect(x: 0, y: 0, width: devicebound.width, height: 60)
+        UIView.animate(withDuration: 0.5, delay: 0.0, usingSpringWithDamping: 0.2, initialSpringVelocity: 5, options:UIViewAnimationOptions(rawValue: 0), animations: {
+            alert.center.y += 55
         }, completion: nil)
     }
     
     func invaildExprView() -> Void {
         let devicebound:CGRect = UIScreen.main.bounds
-        let alert:UILabel = UILabel(frame: CGRect(x: 0, y: -50, width: devicebound.width, height: 50))
+        let alert:UILabel = UILabel(frame: CGRect(x: 0, y: -50, width: devicebound.width, height: 65))
         alert.backgroundColor = UIColor.red
         alert.textColor = UIColor.white
         alert.text = "Unable to evaulate expression"
         alert.textAlignment = .center
         alert.tag = 1
         self.view.addSubview(alert)
-        UIView.animate(withDuration: 0.5, delay: 0.0, usingSpringWithDamping: 0.3, initialSpringVelocity: 0.0, options:UIViewAnimationOptions(rawValue: 0), animations: {
-            alert.frame = CGRect(x: 0, y: 0, width: devicebound.width, height: 60)
+        UIView.animate(withDuration: 0.5, delay: 0.0, usingSpringWithDamping: 0.2, initialSpringVelocity: 5, options:.curveEaseInOut, animations: {
+            alert.center.y += 55
         }, completion: nil)
     }
+    
+    func acclerometerEffect() -> Void {
+        if manager.isDeviceMotionAvailable {
+            manager.deviceMotionUpdateInterval = 0.02
+            manager.startDeviceMotionUpdates(to: OperationQueue.main) {
+                [weak self] (data: CMDeviceMotion?, error: Error?) in
+                
+                if let x = data?.userAcceleration.x,
+                    x < -2.5 {
+                    self!.delete.sendActions(for: UIControlEvents.touchUpInside)
+                }else if let x = data?.userAcceleration.x,
+                    x > 2.5 {
+                    self!.clear.sendActions(for: UIControlEvents.touchUpInside)
+                }
+            }
+        }
+    }
 }
+
+
 
